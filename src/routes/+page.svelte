@@ -2,13 +2,25 @@
 	import { onMount, tick } from 'svelte';
 	import FileComponent from '../components/File.svelte';
 
-	let filesByBaseName: Record<string, File[]> = {};
+	let filesByBaseName: Record<string, File[] | string[]> = {};
 	$: files = Object.entries(filesByBaseName).map(([baseName, docs]) => {
 		return {
 			baseName,
 			docs
 		};
 	});
+
+	async function selectUrlDirectory(url: string) {
+		const response = await fetch(url);
+		const dir = await response.json();
+		for (const file of dir.items) {
+			const baseName = file.name.split('-')[0];
+			if (!filesByBaseName[baseName]) {
+				filesByBaseName[baseName] = [];
+			}
+			filesByBaseName[baseName].push(file);
+		}
+	}
 
 	async function selectDirectory() {
 		const dir = await showDirectoryPicker({ mode: 'read' });
@@ -37,12 +49,16 @@
 	let hideInterface = false;
 	onMount(async () => {
 		// Get URL query param
-		hideInterface = true;
-		await tick();
 		const url = new URL(window.location.href);
 		const urlValue = url.searchParams.get('url');
-		if (urlValue != null) {
-			urlParam = urlValue;
+		if (urlValue != null && urlValue.trim().length > 0) {
+			if (urlValue.endsWith('/')) {
+				await selectUrlDirectory(urlValue);
+			} else {
+				hideInterface = true;
+				await tick();
+				urlParam = urlValue;
+			}
 		}
 	});
 </script>

@@ -1,8 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
-	import Page from '../routes/+page.svelte';
 
-	export let files: File[] | string;
+	export let files: File[] | string[] | string;
 
 	interface Block {
 		layout: Layout;
@@ -125,36 +124,45 @@
 		let page = 0;
 		const jsons: any[] = [];
 		while (true) {
-			const response = await fetch(`${url}-${page}.json`);
-			if (response.status === 404) {
+			try {
+				const response = await fetch(`${url}-${page}.json`);
+				const json = await response.json();
+				jsons.push(json);
+				page++;
+			} catch (e) {
 				break;
 			}
-			const json = await response.json();
-			jsons.push(json);
-			page++;
 		}
 		jsonData = jsons;
 	}
 
-	async function readFilesAsJSON(files: File[]) {
+	async function readFilesAsJSON(files: File[] | string[]) {
 		const fileReadPromises = files.map((file) => {
 			return new Promise((resolve, reject) => {
-				const reader = new FileReader();
+				if (typeof file === 'string') {
+					// Fetch from URL
+					fetch(file)
+						.then((response) => response.json())
+						.then((json) => resolve(json))
+						.catch((error) => reject(error));
+				} else {
+					const reader = new FileReader();
 
-				reader.onload = () => {
-					try {
-						const json = JSON.parse(reader.result as string);
-						resolve(json);
-					} catch (error) {
-						reject(error);
-					}
-				};
+					reader.onload = () => {
+						try {
+							const json = JSON.parse(reader.result as string);
+							resolve(json);
+						} catch (error) {
+							reject(error);
+						}
+					};
 
-				reader.onerror = () => {
-					reject(reader.error);
-				};
+					reader.onerror = () => {
+						reject(reader.error);
+					};
 
-				reader.readAsText(file);
+					reader.readAsText(file);
+				}
 			});
 		});
 
