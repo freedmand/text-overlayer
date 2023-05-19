@@ -14,7 +14,7 @@
 		const response = await fetch(url);
 		const dir = await response.json();
 		for (const file of dir) {
-			const baseName = file.name.split('-')[0];
+			const baseName = file.split('-')[0];
 			if (!filesByBaseName[baseName]) {
 				filesByBaseName[baseName] = [];
 			}
