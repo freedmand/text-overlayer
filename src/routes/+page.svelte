@@ -53,7 +53,7 @@
 		const urlValue = url.searchParams.get('url');
 		if (urlValue != null && urlValue.trim().length > 0) {
 			if (urlValue.endsWith('/')) {
-				await selectUrlDirectory(urlValue);
+				await selectUrlDirectory(`${urlValue}index.json`);
 			} else {
 				hideInterface = true;
 				await tick();
