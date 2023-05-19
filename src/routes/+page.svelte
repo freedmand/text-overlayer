@@ -13,7 +13,7 @@
 	async function selectUrlDirectory(url: string) {
 		const response = await fetch(url);
 		const dir = await response.json();
-		for (const file of dir.items) {
+		for (const file of dir) {
 			const baseName = file.name.split('-')[0];
 			if (!filesByBaseName[baseName]) {
 				filesByBaseName[baseName] = [];
