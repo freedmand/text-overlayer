@@ -2,7 +2,7 @@
 	import { onMount } from 'svelte';
 	import Page from '../routes/+page.svelte';
 
-	export let files: File[];
+	export let files: File[] | string;
 
 	interface Block {
 		layout: Layout;
@@ -121,6 +121,21 @@
 		return page.text.substring(Number(startIndex), Number(endIndex));
 	}
 
+	async function readFilesFromUrl(url: string) {
+		let page = 0;
+		const jsons: any[] = [];
+		while (true) {
+			const response = await fetch(`${url}-${page}.json`);
+			if (response.status === 404) {
+				break;
+			}
+			const json = await response.json();
+			jsons.push(json);
+			page++;
+		}
+		jsonData = jsons;
+	}
+
 	async function readFilesAsJSON(files: File[]) {
 		const fileReadPromises = files.map((file) => {
 			return new Promise((resolve, reject) => {
@@ -152,7 +167,11 @@
 	}
 
 	onMount(async () => {
-		console.log('files', await readFilesAsJSON(files));
+		if (typeof files === 'string') {
+			console.log('files', await readFilesFromUrl(files));
+		} else {
+			console.log('files', await readFilesAsJSON(files));
+		}
 	});
 
 	let showBoxes = true;
